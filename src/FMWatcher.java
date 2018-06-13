@@ -13,8 +13,6 @@ import fmWatchCompanion.FMCommandLineParser;
 import fmWatchCompanion.FMDirChangeEventReceiver;
 import fmWatchCompanion.FMPathList;
 
-import java.lang.instrument.*;
-
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
