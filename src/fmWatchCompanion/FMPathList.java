@@ -2,7 +2,9 @@ package fmWatchCompanion;
 
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.Vector;
 
 import lotus.domino.NotesException;
 import lotus.domino.Session;
@@ -16,6 +18,7 @@ import lotus.domino.Session;
  */
 
 public class FMPathList {
+	private Path2CommandListCommander p2cList;
 	private HashMap<String, String> varFolderCommandPairs=new HashMap<String,String>(1,1);
 	private Integer maxVarCount=50;
 	Session	xDominoSession = null;
@@ -23,10 +26,14 @@ public class FMPathList {
 
 	public Boolean isEmpty() {
 		return varFolderCommandPairs.isEmpty();
+		//trasformare in 
+		//return p2cList.isEmpty();
 	}
 
 	public Set<String> getNotesiniFolderNames () {
 		return varFolderCommandPairs.keySet();
+		//trasformare in 
+		//return p2cList.getFolderSet();
 	}
 
 	public String getNotesiniCommand(String folder) {
@@ -35,7 +42,13 @@ public class FMPathList {
 			result=varFolderCommandPairs.get(folder);
 		} 
 		return result;
+		//obsoleto, ne ritorna solo uno, vogliamo possano essere comandi multipli per medesimo folder
 	}
+
+	public Set<String> getNotesiniCommandSet(String folder) {
+		return p2cList.getCommands4Folder(folder);
+	}
+
 
 	//	FMPathList(Session pDominoSession, Integer pMaxVarCount) {
 	//	FMPathList(FMWatcher fmWatcher,Integer pMaxVarCount) {
@@ -64,6 +77,9 @@ public class FMPathList {
 				if (notesIniFolderName.length()>0 & notesIniCommand.length()>0) {
 					varFolderCommandPairs.put(notesIniFolderName, notesIniCommand);
 					//					fmWatcher.log("Got Folder:" + notesIniFolderName + " --> "+ notesIniCommand);
+
+					//aggiungiamo al nuovo oggetto, poi sarà da togliere varFolderCommandPairs
+					p2cList.put(new PathCommandPair(notesIniFolderName, notesIniCommand, false));
 				}
 			}
 
@@ -86,5 +102,70 @@ public class FMPathList {
 	}
 	 */
 
+
+}
+
+class Path2CommandListCommander {
+	private Vector<PathCommandPair> p2cList=new Vector<PathCommandPair>(5,5);
+
+	public void put(PathCommandPair newElem) {
+		p2cList.addElement(newElem);
+	}
+	public Boolean isEmpty() {
+		return p2cList.isEmpty();
+	}
+	public Set<String> getFolderSet() {
+		//ritorna l'elenco del path da monitorare
+		Set<String> result=new HashSet<String>(p2cList.size());
+
+		for (int i=0; i < p2cList.size(); i++) {
+			result.add( p2cList.get(i).getPath());
+		}
+		return result;
+	}
+
+	public Set<String> getCommands4Folder(String folder) {
+		//ritorna un Set di comandi per un dato folder
+		Set<String> result=new HashSet<String>(5,5);
+		for (int i=0; i < p2cList.size(); i++) {
+			if (p2cList.get(i).getPath().equals(folder)) {
+				result.add( p2cList.get(i).getDominoCommand());
+			}
+		}
+
+		return result;
+	}
+}
+
+class PathCommandPair {
+	private String path="";
+	private Boolean watchSubfolders=false;
+	private String dominoCommand="";
+	public PathCommandPair(String pPath, String pCommand,Boolean pWatchSubfolders) {
+		setPath(pPath);
+		setDominoCommand(pCommand);
+		setWatchSubfolders(pWatchSubfolders);
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
+	public Boolean getWatchSubfolders() {
+		return watchSubfolders;
+	}
+	public void setWatchSubfolders(Boolean watchSubfolders) {
+		this.watchSubfolders = watchSubfolders;
+	}
+	public String getDominoCommand() {
+		return dominoCommand;
+	}
+	public void setDominoCommand(String dominoCommand) {
+		this.dominoCommand = dominoCommand;
+	}
 
 }
