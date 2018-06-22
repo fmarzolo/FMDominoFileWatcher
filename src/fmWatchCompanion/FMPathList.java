@@ -1,7 +1,6 @@
 package fmWatchCompanion;
 
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
@@ -11,47 +10,41 @@ import lotus.domino.Session;
 
 /**********************************************************
  * PathList: allow to search for pairs like these in Notes.INI
+ * FMwathcdir_Folder...50=C:\temp
+ * FMwathcdir_Command...50=tell amgr run .....
+ * FMwathcdir_Subfolders...50=true (or 1)
  * FMwathcdir_Folder1...50=C:\temp
  * FMwathcdir_Command1...50=tell amgr run .....
+ * FMwathcdir_Subfolders...50=false (or 0)
+ * FMwathcdir_Folder2...50=C:\temp
+ * FMwathcdir_Command2...50=tell amgr run .....
  * 
  * 
  */
 
 public class FMPathList {
-	private Path2CommandListCommander p2cList;
-	private HashMap<String, String> varFolderCommandPairs=new HashMap<String,String>(1,1);
+	private Path2CommandListCommander p2cList=new Path2CommandListCommander();
 	private Integer maxVarCount=50;
 	Session	xDominoSession = null;
 	FMBase base=null;
 
 	public Boolean isEmpty() {
-		return varFolderCommandPairs.isEmpty();
+		//		return varFolderCommandPairs.isEmpty();
 		//trasformare in 
-		//return p2cList.isEmpty();
+		return p2cList.isEmpty();
 	}
 
 	public Set<String> getNotesiniFolderNames () {
-		return varFolderCommandPairs.keySet();
+		//		return varFolderCommandPairs.keySet();
 		//trasformare in 
-		//return p2cList.getFolderSet();
+		return p2cList.getFolderSet();
 	}
 
-	public String getNotesiniCommand(String folder) {
-		String result="";
-		if (varFolderCommandPairs.containsKey(folder)) {
-			result=varFolderCommandPairs.get(folder);
-		} 
-		return result;
-		//obsoleto, ne ritorna solo uno, vogliamo possano essere comandi multipli per medesimo folder
-	}
 
 	public Set<String> getNotesiniCommandSet(String folder) {
 		return p2cList.getCommands4Folder(folder);
 	}
 
-
-	//	FMPathList(Session pDominoSession, Integer pMaxVarCount) {
-	//	FMPathList(FMWatcher fmWatcher,Integer pMaxVarCount) {
 	public FMPathList(FMBase base, Integer pMaxVarCount) {
 		this.base=base;
 		xDominoSession=base.getNotesSession();
@@ -64,7 +57,7 @@ public class FMPathList {
 
 	private void init() {
 		try {
-			String notesIniFolderName, notesIniCommand;
+			String notesIniFolderName, notesIniCommand, notesIniSubfolders;
 			Integer i;
 			String str_i;
 			for (i=0;i<=maxVarCount;i++) {
@@ -72,14 +65,18 @@ public class FMPathList {
 				str_i=(i==0)? "" : Integer.toString(i);
 				notesIniFolderName=xDominoSession.getEnvironmentString(FMBase.rootNotesIniFolderName +  str_i, true);
 				notesIniCommand=xDominoSession.getEnvironmentString(FMBase.rootNotesIniCommand + str_i , true);
+				notesIniSubfolders=xDominoSession.getEnvironmentString(FMBase.rootNotesIniSubfolders + str_i , true);
 
 				//				fmWatcher.debug("Getting var:" + rootNotesIniFolderName + str_i);
 				if (notesIniFolderName.length()>0 & notesIniCommand.length()>0) {
-					varFolderCommandPairs.put(notesIniFolderName, notesIniCommand);
-					//					fmWatcher.log("Got Folder:" + notesIniFolderName + " --> "+ notesIniCommand);
+					//					varFolderCommandPairs.put(notesIniFolderName, notesIniCommand);
+					base.log("Got Folder:" + notesIniFolderName + " --> "+ notesIniCommand);
 
-					//aggiungiamo al nuovo oggetto, poi sarà da togliere varFolderCommandPairs
-					p2cList.put(new PathCommandPair(notesIniFolderName, notesIniCommand, false));
+					PathCommandPair pathCommandPair=new PathCommandPair(notesIniFolderName, notesIniCommand, notesIniSubfolders);
+					if (pathCommandPair.getWatchSubfolders()) {
+						base.log("Sorry! Subfolder watching not implemented currently! (Folder "+ pathCommandPair.getPath() + ")");
+					}
+					p2cList.put(pathCommandPair);
 				}
 			}
 
@@ -105,11 +102,23 @@ public class FMPathList {
 
 }
 
+/*
+ * this class mantains a Vector for each folder to be watched. 
+ * Can have siblings (same folder multiple times), so you can register multiple command for the same folder.
+ * 
+ */
+
 class Path2CommandListCommander {
 	private Vector<PathCommandPair> p2cList=new Vector<PathCommandPair>(5,5);
 
 	public void put(PathCommandPair newElem) {
-		p2cList.addElement(newElem);
+		try {
+			p2cList.addElement(newElem);
+		} catch (Exception ne) {
+			System.out.println("Exception: " + ne.getStackTrace()[0].getClassName() +
+					" method: "+ ne.getStackTrace()[0].getMethodName()+
+					", row: " + ne.getStackTrace()[0].getLineNumber() + ": " + ne.toString());
+		}
 	}
 	public Boolean isEmpty() {
 		return p2cList.isEmpty();
@@ -137,11 +146,26 @@ class Path2CommandListCommander {
 	}
 }
 
+/*
+ * this class allow keep for each folder to be watched: 
+ * path
+ * boolean for register on subfolders
+ * domino command for this folder
+ * 
+ */
+ 
+ 
 class PathCommandPair {
 	private String path="";
 	private Boolean watchSubfolders=false;
 	private String dominoCommand="";
 	public PathCommandPair(String pPath, String pCommand,Boolean pWatchSubfolders) {
+		setPath(pPath);
+		setDominoCommand(pCommand);
+		setWatchSubfolders(pWatchSubfolders);
+	}
+
+	public PathCommandPair(String pPath, String pCommand,String pWatchSubfolders) {
 		setPath(pPath);
 		setDominoCommand(pCommand);
 		setWatchSubfolders(pWatchSubfolders);
@@ -158,9 +182,19 @@ class PathCommandPair {
 	public Boolean getWatchSubfolders() {
 		return watchSubfolders;
 	}
+	
 	public void setWatchSubfolders(Boolean watchSubfolders) {
 		this.watchSubfolders = watchSubfolders;
 	}
+	
+	//overload to permits zero length value or "1" or "true"
+	public void setWatchSubfolders(String watchSubfolders) {
+		if (watchSubfolders.length()==0)
+			this.watchSubfolders =false;
+		else
+			this.watchSubfolders = watchSubfolders.equalsIgnoreCase("true") || watchSubfolders.equalsIgnoreCase("1") ? true : false;
+	}
+
 	public String getDominoCommand() {
 		return dominoCommand;
 	}

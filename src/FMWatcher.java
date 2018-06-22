@@ -22,7 +22,7 @@ public class FMWatcher extends JAddinThread {
 	WatchService myWatcher ;
 	FMDirChangeEventReceiver dirChangeEventReceiver;
 	Thread thread4DirChangeEventReceiver ;
-	static final String FMWATCHERVERSION="0.3";
+	static final String FMWATCHERVERSION="0.4";
 	private int varsMax=10;
 
 	private FMBase base=null;
@@ -38,18 +38,25 @@ public class FMWatcher extends JAddinThread {
 		
 		base=new FMBase();
 		base.setNotesSession(getDominoSession());
+		
 
 		if (getAddinParameters()!=null) { 
 			base.log(getName() + " started with the parameters <" + getAddinParameters() + '>');
 			FMCommandLineParser options=new FMCommandLineParser( getAddinParameters());
+
 			if (options.isError()) {
 				usage();	
 			} else {
 				if (options.get("varsMax",0).length()>0) {
 					varsMax=Integer.parseInt(options.get("varsMax",0));
 					logMessage("Will read " + varsMax + " variables from notes.ini");
+				} else if (options.get("debug",0).length()>0) {
+					base.setDebug(true);
+					logMessage("debug messages will be shown");
 				} else {
-					logMessage("You can add parameter \"-varsMax n\" to load as many notes.ini vars (default:"+ varsMax+")");
+					logMessage("You can add parameters:");
+					logMessage("\"-varsMax n\" to load as many notes.ini vars (default:"+ varsMax+")");
+					logMessage("\"-debug\" to show debug messages (in add to the debug! JAddin parameter)");
 				}
 			}
 		}
@@ -68,8 +75,7 @@ public class FMWatcher extends JAddinThread {
 		} else {
 			base.log("Got configurations");
 			for (String folderName : pathList.getNotesiniFolderNames()) {
-				base.log("folderName:" + folderName + " command:"+pathList.getNotesiniCommand(folderName));
-				//Path dir = Paths.get(folderName);
+				base.log("folderName:" + folderName + " commands:"+String.join(", ", pathList.getNotesiniCommandSet(folderName)));
 			}
 			try {
 				if  (! setMonitorFolders(pathList)) {
@@ -85,9 +91,9 @@ public class FMWatcher extends JAddinThread {
 		// Loop to see that the user thread is running ...
 		while (! doQuit) {
 			if (thread4DirChangeEventReceiver.isAlive()) {
-				base.log("Loop waiting events... do nothing.... and sleep...");
+				base.log("Thread waiting events... do nothing.... and sleep...");
 			} else {
-				base.log("Loop terminated, restart program");
+				base.log("Thread terminated, restart program");
 			}
 
 			waitSeconds(15);
@@ -102,8 +108,8 @@ public class FMWatcher extends JAddinThread {
 
 	}
 	void usage() {
-		logMessage(getName() + " set a Watcheable dir so that every change trigger a Domino command.");
-		logMessage("NOTES.ini must contains as meny pairs you like in the form:");
+		logMessage(getName() + " set any number of Watchable dirs so that every change trigger Domino commands.");
+		logMessage("NOTES.ini must contains as many pairs you like in the form:");
 		logMessage("FMwathcdir_Folder=c:\\temp");
 		logMessage("FMwathcdir_Command=tell amgr run \"path\\db.nsf\" 'agentname'");
 		logMessage("FMwathcdir_Folder1=\\\\nas4\\public\\Software");
@@ -129,7 +135,7 @@ public class FMWatcher extends JAddinThread {
 			for (String folderName : pathList.getNotesiniFolderNames()) {
 				i++;
 				storeFolderName=folderName;
-				debug("folderName:" + folderName + " command:"+pathList.getNotesiniCommand(folderName));
+				debug("folderName:" + folderName + " commands:"+pathList.getNotesiniCommandSet(folderName));
 				Path toWatch = Paths.get(folderName);
 				if(toWatch == null) {
 					base.log("Directory not found:" + folderName);
@@ -138,6 +144,8 @@ public class FMWatcher extends JAddinThread {
 					// il metodo register consentirebbe di ricevere una WatchKey univoca per ogni folder
 					// non la usiamo, useremo 
 					toWatch.register(myWatcher, ENTRY_CREATE, ENTRY_MODIFY);
+					
+							
 				}
 
 			}

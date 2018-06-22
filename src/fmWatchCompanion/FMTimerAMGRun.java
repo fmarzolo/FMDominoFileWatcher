@@ -2,6 +2,8 @@ package fmWatchCompanion;
 
 
 
+import java.util.Set;
+
 import lotus.domino.NotesException;
 import lotus.domino.NotesFactory;
 import lotus.domino.NotesThread;
@@ -16,12 +18,12 @@ import lotus.domino.Session;
 public class FMTimerAMGRun extends NotesThread {
 
 	Long secondsDelay;
-	String command;
+	Set<String> commands;
 	Session	xDominoSession = null;
 	//	FMWatcher fmWatcher=null;
-	public FMTimerAMGRun(Long secondsWait, String pcommand) {
+	public FMTimerAMGRun(Long secondsWait, Set<String> pcommands) {
 		this.secondsDelay=secondsWait;
-		this.command=pcommand;
+		this.commands=pcommands;
 		//		this.fmWatcher=fmWatcher;
 		//		fmWatcher.logMessage("in thread command: "+ this.command);
 		//		System.out.println("in thread command: "+ this.command);
@@ -29,24 +31,28 @@ public class FMTimerAMGRun extends NotesThread {
 	
 
 	public void runNotes() {
-
+		
+		
 		//waiting time
 		try {
 			Thread.sleep(secondsDelay * 1000);
-			System.out.println("Timer ended: LAUNCH COMMAND: " + command );
+			System.out.println("Timer ended: LAUNCH COMMAND: " + commands.toString() );
 			//wait ended, launch command
 			xDominoSession=NotesFactory.createSession();
-			xDominoSession.sendConsoleCommand(xDominoSession.getServerName(), command);
+			for (String command : commands) {
+				xDominoSession.sendConsoleCommand(xDominoSession.getServerName(), command);	
+			}
 
 		} catch (InterruptedException e) {
-			System.out.println("Thread interrupted for command:" + command + " ****************************" );
-		}catch (NotesException e) {
-			System.out.println("NotesException launching command: "+ command);
+			//e==null
+			System.out.println("Thread interrupted" );
+		} catch (NotesException e) {
+			System.out.println("NotesException launching command: "+e.getMessage());
 		} finally {
 			if ( xDominoSession!=null) {
 				try { xDominoSession.recycle();
 				}catch (NotesException e) {
-					System.out.println("NotesException launching command: "+ e.getMessage());
+					System.out.println("NotesException recycling: "+ e.getMessage());
 				}
 			}
 

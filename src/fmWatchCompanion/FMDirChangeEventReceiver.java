@@ -6,6 +6,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.HashMap;
+import java.util.Set;
 
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
@@ -52,8 +53,7 @@ public class FMDirChangeEventReceiver implements Runnable {
 			// wait the first event before looping
 			WatchKey key = myWatcher.take();
 			while(key != null) {
-				// we have a polled event, now we traverse it and
-				// receive all the states from it
+				// we have a polled event, now we traverse it and receive all the states from it
 				for (WatchEvent<?> event : key.pollEvents()) {
 					WatchEvent.Kind<?> kind = event.kind();
 					// TBD - provide example of how OVERFLOW event is handled
@@ -62,13 +62,17 @@ public class FMDirChangeEventReceiver implements Runnable {
 					} 
 
 					String folderWatched=key.watchable().toString();
-					String command=pathList.getNotesiniCommand(folderWatched);
+					System.out.println("folderWatched:" + folderWatched);
+
+//					String command=pathList.getNotesiniCommand(folderWatched);
+					Set<String> commands=pathList.getNotesiniCommandSet(folderWatched);
 
 					WatchEvent<Path> ev = cast(event);
 					String filename = ev.context().toAbsolutePath().toString();
 
 					base.log("Received  "+ event.kind().name()+" event for file: " + filename);
-					timerAMGRun= new FMTimerAMGRun(5L, command);
+//					timerAMGRun= new FMTimerAMGRun(5L, command);
+					timerAMGRun= new FMTimerAMGRun(5L, commands);
 					//need to know if a thread is running, we need to stop it to feed with new files
 
 					// keep a HashMap listing all threads started. Every cycle destroy the previous one if it is still alive 
