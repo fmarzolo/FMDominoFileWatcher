@@ -22,7 +22,7 @@ public class FMWatcher extends JAddinThread {
 	WatchService myWatcher ;
 	FMDirChangeEventReceiver dirChangeEventReceiver;
 	Thread thread4DirChangeEventReceiver ;
-	static final String FMWATCHERVERSION="0.4";
+	static final String FMWATCHERVERSION="0.4.1";
 	private int varsMax=10;
 
 	private FMBase base=null;
