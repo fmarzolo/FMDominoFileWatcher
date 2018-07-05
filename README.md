@@ -23,8 +23,11 @@ https://github.com/AndyBrunner/Domino-JAddin
 
 How to install and configure FMDominoFileWatcher
 
-1) copy into the Domino executables folder  the Jaddin files from Andy's site (check for version, we need 1.3.0)
-2) compile or ask me the compiled .class files in the same path, taking care to leave the companion files in the fmWatchCompanion subfolder
+Download from here
+https://github.com/fmarzolo/FMDominoFileWatcher/releases/
+
+1) put into the Domino executable files folder expanding the prerequisite Jaddin*.zip files
+2) put the FM*.class file in the same path, taking care to have the companion files in the fmWatchCompanion subfolder
 3) insert in Notes.ini as many pairs of lines as needed to indicate the path of the folders to be monitored and the syntax of the respective commands to be launched with the following example:
 FMwathcdir_Folder=c:\temp
 FMwathcdir_Command=tell amgr run "names.nsf" 'agent1'
