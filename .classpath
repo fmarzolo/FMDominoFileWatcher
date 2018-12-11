@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/JAddin"/>
-	<classpathentry kind="lib" path="C:/ibm/Notes/jvm/lib/ext"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7">
+	<classpathentry kind="lib" path="C:/IBM/Notes/jvm/lib/ext"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
 		<accessrules>
 			<accessrule kind="accessible" pattern="**"/>
 		</accessrules>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/IBM/Domino/jvm/lib/ext/Notes.jar"/>
+	<classpathentry kind="lib" path="JAddin"/>
+	<classpathentry kind="lib" path="C:/Users/adm-besttool/FMDominoFileWatcher/JAddin"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

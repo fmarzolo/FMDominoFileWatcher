@@ -1,6 +1,6 @@
 package fmWatchCompanion;
-
-
+import fmWatchCompanion.FMBase;
+import fmWatchCompanion.FMBase.DebugLevels;
 
 import java.util.Set;
 
@@ -20,8 +20,10 @@ public class FMTimerAMGRun extends NotesThread {
 	Long secondsDelay;
 	Set<String> commands;
 	Session	xDominoSession = null;
+	FMBase base=null;
 	//	FMWatcher fmWatcher=null;
-	public FMTimerAMGRun(Long secondsWait, Set<String> pcommands) {
+	public FMTimerAMGRun(FMBase base, Long secondsWait, Set<String> pcommands) {
+		this.base=base;
 		this.secondsDelay=secondsWait;
 		this.commands=pcommands;
 		//		this.fmWatcher=fmWatcher;
@@ -29,14 +31,17 @@ public class FMTimerAMGRun extends NotesThread {
 		//		System.out.println("in thread command: "+ this.command);
 	}
 	
-
+	
 	public void runNotes() {
+		
 		
 		
 		//waiting time
 		try {
+
 			Thread.sleep(secondsDelay * 1000);
-			System.out.println("Timer ended: LAUNCH COMMAND: " + commands.toString() );
+			
+			base.log("Timer ended: LAUNCH COMMAND: " + commands.toString(), DebugLevels.HIGH);
 			//wait ended, launch command
 			xDominoSession=NotesFactory.createSession();
 			for (String command : commands) {
@@ -44,22 +49,17 @@ public class FMTimerAMGRun extends NotesThread {
 			}
 
 		} catch (InterruptedException e) {
-			//e==null
-			System.out.println("Thread interrupted" );
+			// this Exception will be triggered for a Thread.interrupt in the code, so is not to be logged normally
+			base.log("Thread interrupted:", DebugLevels.HIGH);
 		} catch (NotesException e) {
-			System.out.println("NotesException launching command: "+e.getMessage());
+			base.logException("NotesException launching command ", e);
 		} finally {
 			if ( xDominoSession!=null) {
 				try { xDominoSession.recycle();
-				}catch (NotesException e) {
-					System.out.println("NotesException recycling: "+ e.getMessage());
+				} catch (NotesException e) {
+					base.logException("NotesException recycling: ", e);
 				}
 			}
-
 		}
-
-
-
 	}
-
 }

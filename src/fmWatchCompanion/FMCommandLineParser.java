@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FMCommandLineParser {
+public class FMCommandLineParser  {
 	final Map<String, List<String>> params = new HashMap<>();
 
 	List<String> options = null;
@@ -29,15 +29,25 @@ public class FMCommandLineParser {
 		return error;
 	}
 	
-	public String get(String arg, int pos) {
-		return params.get(arg).get(pos).toString();
+	public String get(String arg, int pos) throws Exception {
+		String ret="";
+		if (params.containsKey(arg))
+			ret=params.get(arg).get(pos).toString();
+		else
+			ret="";
+		return ret;
 	}
 	
-	public FMCommandLineParser(String[] args) {
+	public String[] getKeySet() throws Exception {
+		String[] strings = params.keySet().toArray(new String[params.size()]);
+		return strings;
+	}
+	
+	public FMCommandLineParser(String[] args) throws Exception  {
 		init(args);
 	}
 	
-	public FMCommandLineParser(String args) {
+	public FMCommandLineParser(String args) throws Exception {
 		String[] parameters = args.split("\\s+");
 		init(parameters);
 	}
@@ -48,6 +58,7 @@ public class FMCommandLineParser {
 			final String a = args[i];
 
 			if (a.charAt(0) == '-') {
+
 				if (a.length() < 2) {
 					error=true;
 					System.err.println("Error at argument " + a);
@@ -61,7 +72,7 @@ public class FMCommandLineParser {
 				options.add(a);
 			}
 			else {
-				System.out.println("Illegal parameter usage");
+				System.out.println("Illegal parameter usage:" + a);
 				error=true;
 				return;
 			}

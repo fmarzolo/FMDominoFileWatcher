@@ -8,6 +8,8 @@ import java.nio.file.WatchService;
 import java.util.HashMap;
 import java.util.Set;
 
+import fmWatchCompanion.FMBase.DebugLevels;
+
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 import java.nio.file.Path;
@@ -62,7 +64,7 @@ public class FMDirChangeEventReceiver implements Runnable {
 					} 
 
 					String folderWatched=key.watchable().toString();
-					System.out.println("folderWatched:" + folderWatched);
+					base.log("folderWatched:" + folderWatched, DebugLevels.HIGH);
 
 //					String command=pathList.getNotesiniCommand(folderWatched);
 					Set<String> commands=pathList.getNotesiniCommandSet(folderWatched);
@@ -70,17 +72,15 @@ public class FMDirChangeEventReceiver implements Runnable {
 					WatchEvent<Path> ev = cast(event);
 					String filename = ev.context().toAbsolutePath().toString();
 
-					base.log("Received  "+ event.kind().name()+" event for file: " + filename);
-//					timerAMGRun= new FMTimerAMGRun(5L, command);
-					timerAMGRun= new FMTimerAMGRun(5L, commands);
-					//need to know if a thread is running, we need to stop it to feed with new files
+					base.log("Received  "+ event.kind().name()+" event for file: " + filename, DebugLevels.HIGH);
+					timerAMGRun= new FMTimerAMGRun(base, 5L, commands);
 
 					// keep a HashMap listing all threads started. Every cycle destroy the previous one if it is still alive 
 //					base.log("New thread managing: thread knowed:" + threadMap.containsKey(folderWatched));
 					if (threadMap.containsKey(folderWatched)) {
-//						base.log("New thread managing: thread isAlive:" + threadMap.get(folderWatched).isAlive());
+						base.log("New thread managing: thread isAlive:" + threadMap.get(folderWatched).isAlive(),DebugLevels.TRACE);
 						if (threadMap.get(folderWatched).isAlive()) {
-//							base.log("New thread managing: INTERRUPTING");
+							base.log("New thread managing: INTERRUPTING", DebugLevels.TRACE);
 							threadMap.get(folderWatched).interrupt();
 						}
 					}
@@ -97,9 +97,9 @@ public class FMDirChangeEventReceiver implements Runnable {
 
 			}
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			base.logException("InterruptedException", e);
 		} finally {
-			System.out.println("Stopping thread");
+			base.log("Stopping thread", DebugLevels.HIGH);
 		}
 	}
 }

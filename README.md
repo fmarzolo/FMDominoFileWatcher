@@ -7,9 +7,9 @@ These events launch one or more IBM Domino command each. You can configure any n
 
 When new files are created in the configured folders, the operating system "warns" our code that triggers a configured command, which can be different for each monitored folder.
 
-We could configure the folders c:\filepdf\, d:\otherFolder\, so that when they receive new files, the Domino command line is:
-- tell amgr run "tools \ db1.nsf" 'Read PDF File'
-- tell amgr run "tools \ db2.nsf" 'other command'
+We could configure the folders c:/filepdf/, d:/otherFolder/, so that when they receive new files, the Domino command line is:
+- tell amgr run "tools/db1.nsf" 'Read PDF File'
+- tell amgr run "tools/db2.nsf" 'other command'
 
 Every request to execute the Domino command start a Thread that wait 5 second to allow new file arrive. If new files arrive, the thread is terminated and a newer thread is started. So only when there are 5 seconds without new activity the command run.  
 
@@ -29,17 +29,26 @@ https://github.com/fmarzolo/FMDominoFileWatcher/releases/
 1) put into the Domino executable files folder expanding the prerequisite Jaddin*.zip files
 2) put the FM*.class file in the same path, taking care to have the companion files in the fmWatchCompanion subfolder
 3) insert in Notes.ini as many pairs of lines as needed to indicate the path of the folders to be monitored and the syntax of the respective commands to be launched with the following example:
-FMwathcdir_Folder=c:\temp
-FMwathcdir_Command=tell amgr run "names.nsf" 'agent1'
-FMwathcdir_Folder1=\\nas4\public\Software
-FMwathcdir_Command1=tell amgr run "tools\db2.nsf" 'agent2'
-FMwathcdir_Folder2=c:\temp
-FMwathcdir_Command2=tell amgr run "tools\db3.nsf" 'agent3'
+FMwatchdir_Folder=c:/temp
+FMwatchdir_Command=tell amgr run "names.nsf" 'agent1'
+FMwatchdir_Folder1=//nas4/public/Software
+FMwatchdir_Command1=tell amgr run "tools/db2.nsf" 'agent2'
+FMwatchdir_Folder2=c:/temp
+FMwatchdir_Command2=tell amgr run "tools/db3.nsf" 'agent3'
 
-Pay attention: the default Domino Windows service starts with LocalSystem rights and therefore does not have network access, so it can not see paths other than local disks.
+Pay attention: the default Domino Windows service starts with LocalSystem rights and therefore maybe does not have network access, so it can not see paths other than local disks.
 
 If you need more than 20 (default) pairs "folder-command" you can set any maximum number with the syntax {-varsMax n}, for example:
 -varsMax 200
+
+If you need more verbose logging you can specify:
+-loglevel x
+replacing x with an integer as:
+	0: no logging
+	1: terse logging
+	5: normal logging
+	7: verbose logging
+	9: trace, very verbose logging
 
 4) Launch execution (attention to casing that in java is relevant)
 load runjava JAddin FMWatcher
@@ -47,12 +56,19 @@ load runjava JAddin FMWatcher
 5) Debugging. You can set a high debug through two levels of debugging setting
 debugging JAddin: load runjava JAddin FMWatcher Debug!
 debugging FMWatcher: load runjava JAddin FMWatcher -debug
+	(this is the same then use "load runjava JAddin FMWatcher -loglevel 9"
 debugging of both: load runjava JAddin FMWatcher Debug! -debug
+	(this is the same then use "load runjava JAddin FMWatcher Debug! -loglevel 9"
 
 6) Launch at server startup
 To start the application automatically when the Domino server starts, you can add notes.ini to the end of the line:
 SERVERTASKS = xxxx, xxx, xxx, load runjava JAddin FMWatcher
 
+7) Modify runtime logging level
+To modify runtime the logging level you can use the following command, use the above values for x:
+	tell FMWatcher -loglevel x
+	
+	
 Caveats
 
 It may happen that the changes to the folders to be monitored are continuous throughout the day and are never separated from each other by 5 seconds. In this case the waiting timer would never expire, and it could happen that the configured command is not launched.
@@ -61,9 +77,6 @@ Contacts
 Francesco Marzolo
 checco.marzolo (at) gmail
 If you liked this job you can give me a pepperoni pizza, which I love:
-BTC: 19qGMb33TPLn29UtBo3mFrRyr4ekAVYeaz
-ETH: 0xD2bF6c3d833b98C34AbCDfB4EA6022DAF48bc22F
-LTC: Lh4r6QLsyaysHnS38FZ4qvqSDFcoTJJa7t
 
 Bibliography and references for those who want to deepen
 

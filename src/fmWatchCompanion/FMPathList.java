@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 
+import fmWatchCompanion.FMBase.DebugLevels;
 import lotus.domino.NotesException;
 import lotus.domino.Session;
 
@@ -67,28 +68,26 @@ public class FMPathList {
 				notesIniCommand=xDominoSession.getEnvironmentString(FMBase.rootNotesIniCommand + str_i , true);
 				notesIniSubfolders=xDominoSession.getEnvironmentString(FMBase.rootNotesIniSubfolders + str_i , true);
 
-				//				fmWatcher.debug("Getting var:" + rootNotesIniFolderName + str_i);
+				base.log("Getting var:" + FMBase.rootNotesIniFolderName +  str_i, DebugLevels.HIGH);
 				if (notesIniFolderName.length()>0 & notesIniCommand.length()>0) {
 					//					varFolderCommandPairs.put(notesIniFolderName, notesIniCommand);
-					base.log("Got Folder:" + notesIniFolderName + " --> "+ notesIniCommand);
+					base.log("Got Folder:" + notesIniFolderName + " --> "+ notesIniCommand, DebugLevels.HIGH);
 
 					PathCommandPair pathCommandPair=new PathCommandPair(notesIniFolderName, notesIniCommand, notesIniSubfolders);
 					if (pathCommandPair.getWatchSubfolders()) {
-						base.log("Sorry! Subfolder watching not implemented currently! (Folder "+ pathCommandPair.getPath() + ")");
+						base.log("Sorry! Subfolder watching not implemented currently! (Folder "+ pathCommandPair.getPath() + ")", DebugLevels.LOW);
 					}
 					p2cList.put(pathCommandPair);
 				}
 			}
 
 		} catch (NotesException ne) {
-			//			fmWatcher.logException("got NotesException, unable to continue.", ne);
-			System.out.println("got NotesException, unable to continue." + ne);
+			base.logException("got NotesException, unable to continue." , ne);
 		} finally {
 			try {
 				if (xDominoSession!=null) xDominoSession.recycle();
 			} catch (Exception e) {
-				//								fmWatcher.logException("got Exception in Finally.", e);
-				System.out.println("got Exception in Finally "+ e);
+				base.logException("got Exception in Finally ",e);
 			}
 		}
 	}
