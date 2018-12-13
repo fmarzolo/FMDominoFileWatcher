@@ -1,3 +1,4 @@
+
 //wonderful example for watching directory in thread:
 //https://www.thecoderscorner.com/team-blog/java-and-jvm/java-nio/36-watching-files-in-java-7-with-watchservice/
 
@@ -23,60 +24,31 @@ public class FMWatcher extends JAddinThread {
 	WatchService myWatcher ;
 	FMDirChangeEventReceiver dirChangeEventReceiver;
 	Thread thread4DirChangeEventReceiver ;
-	static final String FMWATCHERVERSION="0.4.2";
+	static final String FMWATCHERVERSION="0.4.3";
 	private int varsMax=10;
+	private String stringVersion="";
 
 	private FMBase base=null;
 
 	// This method runs in a separate thread to avoid any processing delays of the main Domino message queue.
 	public void addinStart() {
-
 		base=new FMBase(getDominoSession());
+		base.setDebugLevel(DebugLevels.LOW);
 
 		try {
-			base.log(getName() + " version " + FMWATCHERVERSION +  " Running on " + getDominoSession().getNotesVersion());
+			stringVersion=FMWATCHERVERSION +  " Running on " + getDominoSession().getNotesVersion();
+			base.log(getName() + " version " + stringVersion);
 		} catch (Exception e) {
-			base.logException("Unable to get version: " , e);
+			base.logException(getName()+": Unable to get version: " , e);
 		}
 
-		//decoding parameters
 		try {
 			if (getAddinParameters()!=null) {
 				base.log(getName() + " started with parameters <" + getAddinParameters() + '>');
-				FMCommandLineParser options=new FMCommandLineParser( getAddinParameters());
-				//				base.log("letti options da notes.ini");
-				//				base.log("keyset:" + String.join(", ", options.getKeySet()));
-
-				if (options.isError()) {
-					usageParms();	
-				} else {
-					base.log("reading parms");
-					if (options.get("varsMax",0).length()>0) {
-						varsMax=Integer.parseInt(options.get("varsMax",0));
-						base.log("Will read " + varsMax + " variables from notes.ini", DebugLevels.HIGH);
-					} 
-					if (options.get("loglevel",0).length()>0) {
-						//						base.log("reading loglevel");
-						int loglev=Integer.parseInt(options.get("loglevel",0));
-						//						logMessage("Setting loglevel to " + loglev);
-						switch (loglev) {
-						case 0:	base.setDebugLevel(DebugLevels.NONE); break;
-						case 1:	base.setDebugLevel(DebugLevels.LOW);break;
-						case 5:	base.setDebugLevel(DebugLevels.NORM);break;
-						case 7:	base.setDebugLevel(DebugLevels.HIGH);break;
-						case 9:	base.setDebugLevel(DebugLevels.TRACE);break;
-						default:usageVars();
-						}
-					} 
-					if (options.get("debug",0).length()>0) {
-						//						base.log("reading debug");
-						logMessage("debug messages will be shown");
-						base.setDebugLevel(DebugLevels.TRACE);
-					} 
-				}
+				WatcherParmsDecoder(getAddinParameters(), base);	
 			}
 		} catch (Exception e) {
-			base.logException("Exception decoding parameters", e);
+			base.logException(getName() + ": Exception decoding parameters", e);
 			doQuit=true;
 		}
 
@@ -88,17 +60,17 @@ public class FMWatcher extends JAddinThread {
 			if (pathList.isEmpty()) {
 				base.log("Unable to get any configuration.\n\n Please configure and restart");
 			} else {
-				base.log("Got configurations", DebugLevels.HIGH);
+				base.log(getName() + ": Got configurations", DebugLevels.HIGH);
 				for (String folderName : pathList.getNotesiniFolderNames()) {
-					base.log("folderName:" + folderName + " commands:"+String.join(", ", pathList.getNotesiniCommandSet(folderName)), DebugLevels.HIGH);
+					base.log(getName() + ": folderName:" + folderName + " commands:"+String.join(", ", pathList.getNotesiniCommandSet(folderName)), DebugLevels.HIGH);
 				}
 				try {
 					if  (! setMonitorFolders(pathList)) {
-						base.log("setMonitor Error");
+						base.log(getName() + ": setMonitor Error");
 						doQuit=true;
 					};
 				} catch (Exception e){
-					base.logException("Unknown Exception " , e);
+					base.logException(getName() + ": Unknown Exception " , e);
 					doQuit=true;
 				}
 			}
@@ -106,9 +78,9 @@ public class FMWatcher extends JAddinThread {
 			// Loop to see that the user thread is running ...
 			while (! doQuit) {
 				if (thread4DirChangeEventReceiver.isAlive()) {
-					base.log("Thread waiting events... do nothing.... and sleep...", DebugLevels.HIGH);
+					base.log(getName() + ": Thread waiting events... do nothing.... and sleep...", DebugLevels.HIGH);
 				} else {
-					base.log("Thread terminated unexpectedly, restart program");
+					base.log(getName() + ": Thread terminated unexpectedly, restart program");
 				}
 				waitSeconds(15);
 			}
@@ -130,7 +102,7 @@ public class FMWatcher extends JAddinThread {
 	}
 
 	void usageParms() {
-		logMessage("You can launch program with the parameter -varsMax n to have as many folder watched you need");
+		logMessage(getName() + ": You can launch program with the parameter -varsMax n to have as many folder watched you need");
 		logMessage("You can add parameters:");
 		logMessage("\"-varsMax n\" to load as many notes.ini vars (default:"+ varsMax+")");
 		logMessage("\"-loglevel n\" to set log level (0-1-5-7-9, default:"+ 0+")");
@@ -158,12 +130,12 @@ public class FMWatcher extends JAddinThread {
 			for (String folderName : pathList.getNotesiniFolderNames()) {
 				i++;
 				storeFolderName=folderName;
-				base.log("folderName:" + folderName + " commands:"+pathList.getNotesiniCommandSet(folderName), DebugLevels.HIGH);
+				base.log(getName() + ": FolderName:" + folderName + " commands:"+pathList.getNotesiniCommandSet(folderName), DebugLevels.HIGH);
 				Path toWatch = Paths.get(folderName);
 				if(toWatch == null) {
-					base.log("Directory not found:" + folderName);
+					base.log(getName() + ": Directory not found:" + folderName);
 				} else {
-					base.log("registering folder ("+ i + "):" + folderName, DebugLevels.HIGH);
+					base.log(getName() + ": Registering folder ("+ i + "):" + folderName, DebugLevels.HIGH);
 					// il metodo register consentirebbe di ricevere una WatchKey univoca per ogni folder
 					// non la usiamo, useremo 
 					toWatch.register(myWatcher, ENTRY_CREATE, ENTRY_MODIFY);
@@ -171,9 +143,9 @@ public class FMWatcher extends JAddinThread {
 			}
 			result=true;
 		} catch (AccessDeniedException e) {
-			base.logException("Exception: Access denied in folder: "+storeFolderName , e);
+			base.logException(getName() + ": Exception: Access denied in folder: "+storeFolderName , e);
 		} catch (IOException e) {
-			base.logException("Exception: " ,e);
+			base.logException(getName() + ": Exception: " ,e);
 		}
 		return result;
 	}
@@ -191,21 +163,41 @@ public class FMWatcher extends JAddinThread {
 	public void addinCommand(String command) {
 		base.log(getName() + ": You have entered the command <" + command + '>');
 		try {
-			FMCommandLineParser options=new FMCommandLineParser( command);
+			//WatcherParmsDecoder commandDecoder= new WatcherParmsDecoder(command, base);
+			WatcherParmsDecoder(command, base);			
 
-			//complete command case:
-			if (command.equalsIgnoreCase("SendMail")) {
+		} catch (Exception e) {
+			base.logException(getName() + ": Unable to understand command", e);
+		}
+	}
+
+
+
+	// decodes parameter commands
+	void WatcherParmsDecoder(String parms, FMBase base) throws Exception {
+
+		FMCommandLineParser options=new FMCommandLineParser(parms);
+
+		if (options.isError()) {
+			throw new Exception("Error reading parameters");
+		} else {
+			if (parms.equalsIgnoreCase("sendmail")) {
 				try {
 					sendMessage("FromAddress@acme.com", "RecipientAddress@acme.com", "Test message", "Some email text content");
 				} catch (Exception e) {
-					base.logException("Unable to send message", e);
+					base.logException(getName() + ": Unable to send message", e);
 				}
 			}
+
+			if (options.get("varsmax",0).length()>0) {
+				varsMax=Integer.parseInt(options.get("varsmax",0));
+				base.log(getName() + ": Will read " + varsMax + " variables from notes.ini");
+			} 
 
 			//parameterized command case:
 			if (options.get("loglevel",0).length()>0) {
 				int loglev=Integer.parseInt(options.get("loglevel",0));
-				base.log("setting loglevel to " +loglev);
+				base.log(getName() + ": Setting loglevel to " +loglev);
 				switch (loglev) {
 				case 0:	base.setDebugLevel(DebugLevels.NONE); break;
 				case 1:	base.setDebugLevel(DebugLevels.LOW);break;
@@ -216,11 +208,29 @@ public class FMWatcher extends JAddinThread {
 				}
 			}
 
-		} catch (Exception e) {
-			base.logException("Unable to understand command", e);
+			if (options.get("debug",0).length()>0) {
+				logMessage(getName() + ": debug messages will be shown");
+				base.setDebugLevel(DebugLevels.TRACE);
+			}
+
+			if (options.containsKey("quit")) {
+				logMessage(getName() + ": quit requested");
+				doQuit=true;
+			} 
+
+			if (options.containsKey("version")) {
+				//				try {
+				base.log(getName() + " version " + stringVersion);	
+				//				} catch (Exception e) {
+				//					base.logException("Exception requesting version", e);
+				//				}
+
+			} 
+
 		}
-
-
 	}
 
 }
+
+
+

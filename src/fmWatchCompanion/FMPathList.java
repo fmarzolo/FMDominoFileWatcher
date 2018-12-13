@@ -70,7 +70,6 @@ public class FMPathList {
 
 				base.log("Getting var:" + FMBase.rootNotesIniFolderName +  str_i, DebugLevels.HIGH);
 				if (notesIniFolderName.length()>0 & notesIniCommand.length()>0) {
-					//					varFolderCommandPairs.put(notesIniFolderName, notesIniCommand);
 					base.log("Got Folder:" + notesIniFolderName + " --> "+ notesIniCommand, DebugLevels.HIGH);
 
 					PathCommandPair pathCommandPair=new PathCommandPair(notesIniFolderName, notesIniCommand, notesIniSubfolders);

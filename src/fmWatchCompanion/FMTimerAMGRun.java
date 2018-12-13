@@ -34,15 +34,13 @@ public class FMTimerAMGRun extends NotesThread {
 	
 	public void runNotes() {
 		
-		
-		
 		//waiting time
 		try {
 
 			Thread.sleep(secondsDelay * 1000);
 			
-			base.log("Timer ended: LAUNCH COMMAND: " + commands.toString(), DebugLevels.HIGH);
-			//wait ended, launch command
+			base.log(getName() + ": launching command: " + commands.toString(), DebugLevels.LOW);
+
 			xDominoSession=NotesFactory.createSession();
 			for (String command : commands) {
 				xDominoSession.sendConsoleCommand(xDominoSession.getServerName(), command);	
@@ -50,14 +48,14 @@ public class FMTimerAMGRun extends NotesThread {
 
 		} catch (InterruptedException e) {
 			// this Exception will be triggered for a Thread.interrupt in the code, so is not to be logged normally
-			base.log("Thread interrupted:", DebugLevels.HIGH);
+			base.log(getName()+": Thread interrupted", DebugLevels.HIGH);
 		} catch (NotesException e) {
-			base.logException("NotesException launching command ", e);
+			base.logException(getName()+": NotesException launching command ", e);
 		} finally {
 			if ( xDominoSession!=null) {
 				try { xDominoSession.recycle();
 				} catch (NotesException e) {
-					base.logException("NotesException recycling: ", e);
+					base.logException(getName()+": NotesException recycling: ", e);
 				}
 			}
 		}
