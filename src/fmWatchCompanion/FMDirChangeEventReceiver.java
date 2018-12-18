@@ -42,13 +42,12 @@ public class FMDirChangeEventReceiver implements Runnable {
 
 	private HashMap<String,Thread> threadMap=new HashMap<String,Thread>();
 
-	/**
-	 * In order to implement a file watcher, we loop forever
+	/** In order to implement a file watcher, we loop forever
 	 * ensuring requesting to take the next item from the file
 	 * watchers queue.
 	 */
-	FMTimerAMGRun timerAMGRun;
-	Thread thread4TimerAMGRun ;
+	FMTimerLaunchDominoCmd timerLaunchDominoCmd;
+	Thread thread4TimerLaunchDominoCmd;
 	@Override
 	public void run() {
 		try {
@@ -66,14 +65,16 @@ public class FMDirChangeEventReceiver implements Runnable {
 					String folderWatched=key.watchable().toString();
 					base.log("folderWatched:" + folderWatched, DebugLevels.HIGH);
 
-//					String command=pathList.getNotesiniCommand(folderWatched);
+					//get a Set of command for this folder
 					Set<String> commands=pathList.getNotesiniCommandSet(folderWatched);
+
+					//Set does not allow for duplicates, so commands are unique
 
 					WatchEvent<Path> ev = cast(event);
 					String filename = ev.context().toAbsolutePath().toString();
 
 					base.log("Received  "+ event.kind().name()+" event for file: " + filename, DebugLevels.HIGH);
-					timerAMGRun= new FMTimerAMGRun(base, 5L, commands);
+					timerLaunchDominoCmd= new FMTimerLaunchDominoCmd(base, 5L, commands);
 
 					// keep a HashMap listing all threads started. Every cycle destroy the previous one if it is still alive 
 //					base.log("New thread managing: thread knowed:" + threadMap.containsKey(folderWatched));
@@ -87,9 +88,9 @@ public class FMDirChangeEventReceiver implements Runnable {
 
 					// Start thread for run command with name equal to folder path to watch
 					// this will help to destroy it if the same folder receive other files 
-					thread4TimerAMGRun = new Thread(timerAMGRun);
-					thread4TimerAMGRun.start();
-					threadMap.put(folderWatched,thread4TimerAMGRun);
+					thread4TimerLaunchDominoCmd = new Thread(timerLaunchDominoCmd);
+					thread4TimerLaunchDominoCmd.start();
+					threadMap.put(folderWatched,thread4TimerLaunchDominoCmd);
 
 				}
 				key.reset();

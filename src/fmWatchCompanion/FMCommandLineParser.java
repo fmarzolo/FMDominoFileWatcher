@@ -86,7 +86,7 @@ public class FMCommandLineParser  {
 			} else if (options != null) {			//this add an option to 
 				options.add(a);
 			} else {
-				System.out.println("Illegal parameter usage:" + a);
+				System.out.println("Illegal parameter usage: \"" + a+"\", please specify commands starting with an hyphen");
 				error=true;
 				return;
 			}

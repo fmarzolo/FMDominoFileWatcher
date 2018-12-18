@@ -14,15 +14,14 @@ import lotus.domino.Session;
  * the wait time is provided to allow other events at the same time:
  * the command is launched AFTER that all joining event are ended 
  */
-//public class FMTimerAMGRunThread implements Runnable {
-public class FMTimerAMGRun extends NotesThread {
 
+public class FMTimerLaunchDominoCmd extends NotesThread {
 	Long secondsDelay;
 	Set<String> commands;
 	Session	xDominoSession = null;
 	FMBase base=null;
 	//	FMWatcher fmWatcher=null;
-	public FMTimerAMGRun(FMBase base, Long secondsWait, Set<String> pcommands) {
+	public FMTimerLaunchDominoCmd(FMBase base, Long secondsWait, Set<String> pcommands) {
 		this.base=base;
 		this.secondsDelay=secondsWait;
 		this.commands=pcommands;
@@ -31,7 +30,6 @@ public class FMTimerAMGRun extends NotesThread {
 		//		System.out.println("in thread command: "+ this.command);
 	}
 	
-	
 	public void runNotes() {
 		
 		//waiting time
@@ -39,7 +37,7 @@ public class FMTimerAMGRun extends NotesThread {
 
 			Thread.sleep(secondsDelay * 1000);
 			
-			base.log(getName() + ": launching command: " + commands.toString(), DebugLevels.LOW);
+			base.log(getName() + ": launching commands: " + commands.toString(), DebugLevels.LOW);
 
 			xDominoSession=NotesFactory.createSession();
 			for (String command : commands) {

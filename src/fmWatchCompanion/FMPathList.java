@@ -7,7 +7,6 @@ import java.util.Vector;
 
 import fmWatchCompanion.FMBase.DebugLevels;
 import lotus.domino.NotesException;
-import lotus.domino.Session;
 
 /**********************************************************
  * PathList: allow to search for pairs like these in Notes.INI
@@ -26,7 +25,7 @@ import lotus.domino.Session;
 public class FMPathList {
 	private Path2CommandListCommander p2cList=new Path2CommandListCommander();
 	private Integer maxVarCount=50;
-	Session	xDominoSession = null;
+
 	FMBase base=null;
 
 	public Boolean isEmpty() {
@@ -48,7 +47,7 @@ public class FMPathList {
 
 	public FMPathList(FMBase base, Integer pMaxVarCount) {
 		this.base=base;
-		xDominoSession=base.getNotesSession();
+
 
 		if (pMaxVarCount>0) {
 			this.maxVarCount=pMaxVarCount;
@@ -64,9 +63,9 @@ public class FMPathList {
 			for (i=0;i<=maxVarCount;i++) {
 				//remove first "0" string integer to clean Notes.ini var and search it without trailing number
 				str_i=(i==0)? "" : Integer.toString(i);
-				notesIniFolderName=xDominoSession.getEnvironmentString(FMBase.rootNotesIniFolderName +  str_i, true);
-				notesIniCommand=xDominoSession.getEnvironmentString(FMBase.rootNotesIniCommand + str_i , true);
-				notesIniSubfolders=xDominoSession.getEnvironmentString(FMBase.rootNotesIniSubfolders + str_i , true);
+				notesIniFolderName=base.getNotesSession().getEnvironmentString(FMBase.rootNotesIniFolderName +  str_i, true);
+				notesIniCommand=base.getNotesSession().getEnvironmentString(FMBase.rootNotesIniCommand + str_i , true);
+				notesIniSubfolders=base.getNotesSession().getEnvironmentString(FMBase.rootNotesIniSubfolders + str_i , true);
 
 				base.log("Getting var:" + FMBase.rootNotesIniFolderName +  str_i, DebugLevels.HIGH);
 				if (notesIniFolderName.length()>0 & notesIniCommand.length()>0) {
@@ -82,21 +81,9 @@ public class FMPathList {
 
 		} catch (NotesException ne) {
 			base.logException("got NotesException, unable to continue." , ne);
-		} finally {
-			try {
-				if (xDominoSession!=null) xDominoSession.recycle();
-			} catch (Exception e) {
-				base.logException("got Exception in Finally ",e);
-			}
 		}
-	}
 
-	/*
-	public HashMap<String, String> getPairs()  {
-		return varFolderCommandPairs;
 	}
-	 */
-
 
 }
 
@@ -150,9 +137,8 @@ class Path2CommandListCommander {
  * boolean for register on subfolders
  * domino command for this folder
  * 
- */
- 
- 
+ */ 
+
 class PathCommandPair {
 	private String path="";
 	private Boolean watchSubfolders=false;
@@ -180,11 +166,11 @@ class PathCommandPair {
 	public Boolean getWatchSubfolders() {
 		return watchSubfolders;
 	}
-	
+
 	public void setWatchSubfolders(Boolean watchSubfolders) {
 		this.watchSubfolders = watchSubfolders;
 	}
-	
+
 	//overload to permits zero length value or "1" or "true"
 	public void setWatchSubfolders(String watchSubfolders) {
 		if (watchSubfolders.length()==0)
