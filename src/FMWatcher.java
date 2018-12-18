@@ -219,6 +219,9 @@ public class FMWatcher extends JAddinThread {
 			if (options.get("waitseconds",0).length()>0) {
 				gotCommand=true;
 				waitSeconds=Integer.parseInt(options.get("waitseconds",0));
+				if (waitSeconds<1) {
+					waitSeconds=1;
+				}
 				base.log(getName() + ": Setting waitseconds to " +waitSeconds);
 			}
 			

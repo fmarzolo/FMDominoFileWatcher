@@ -27,8 +27,9 @@ Download from here
 https://github.com/fmarzolo/FMDominoFileWatcher/releases/
 
 1) put into the Domino executable files folder expanding the prerequisite Jaddin*.zip files
-2) put the FM*.class file in the same path, taking care to have the companion files in the fmWatchCompanion subfolder
-3) insert in Notes.ini as many pairs of lines as needed to indicate the path of the folders to be monitored and the syntax of the respective commands to be launched with the following example:
+2) put the FM*.class file in the same path
+3) put the fmWatchCompanion.jar file in folder \Domino\jvm\lib\ext 
+4) insert in Notes.ini as many pairs of lines as needed to indicate the path of the folders to be monitored and the syntax of the respective commands to be launched with the following example:
 FMwatchdir_Folder=c:/temp
 FMwatchdir_Command=tell amgr run "names.nsf" 'agent1'
 FMwatchdir_Folder1=//nas4/public/Software
@@ -36,21 +37,26 @@ FMwatchdir_Command1=tell amgr run "tools/db2.nsf" 'agent2'
 FMwatchdir_Folder2=c:/temp
 FMwatchdir_Command2=tell amgr run "tools/db3.nsf" 'agent3'
 
-Pay attention: the default Domino Windows service starts with LocalSystem rights and therefore maybe does not have network access, so it can not see paths other than local disks.
+Please note: the default Domino Windows service starts with LocalSystem rights and therefore maybe does not have network access, so it can not see paths other than local disks. It may require to create a user with network access, and tell Domino service to login with it, set the user name in service properties.
 
-If you need more than 20 (default) pairs "folder-command" you can set any maximum number with the syntax {-varsMax n}, for example:
+If you need more than 10 (default) pairs "folder-command" you can set any maximum number with the syntax {-varsMax n}, for example:
 -varsMax 200
 
 If you need more verbose logging you can specify:
 -loglevel x
 replacing x with an integer as:
-	0: no logging
+	0: no logging (default)
 	1: terse logging
 	5: normal logging
 	7: verbose logging
 	9: trace, very verbose logging
+	
+If you need shorter loop between launch commands:
+- waitseconds x
+replacing x with a number that indicates the number of seconds to wait between loops of check threads.
+Please note, these loops are free of charge for the CPU, so is not relevant for CPU to have longer or shorter time to wait. The number 0 is not valid.
 
-4) Launch execution (attention to casing that in java is relevant)
+4) Launch execution (pay attention to casing that in java is relevant)
 load runjava JAddin FMWatcher
 
 5) Debugging. You can set a high debug through two levels of debugging setting
@@ -64,14 +70,14 @@ debugging of both: load runjava JAddin FMWatcher Debug! -debug
 To start the application automatically when the Domino server starts, you can add notes.ini to the end of the line:
 SERVERTASKS = xxxx, xxx, xxx, load runjava JAddin FMWatcher
 
-7) Modify runtime logging level
+7) To modify runtime logging level
 To modify runtime the logging level you can use the following command, use the above values for x:
 	tell FMWatcher -loglevel x
 	
 	
 Caveats
 
-It may happen that the changes to the folders to be monitored are continuous throughout the day and are never separated from each other by 5 seconds. In this case the waiting timer would never expire, and it could happen that the configured command is not launched.
+It may happen that the changes to the folders to be monitored are continuous throughout the day and are never separated from each other by 15 seconds. In this case the waiting timer would never expire, and it could happen that the configured command is not launched. May be usefull trye to set shorter loop by setting "-waitseconds 5"
 
 Contacts
 Francesco Marzolo
